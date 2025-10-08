@@ -36,7 +36,7 @@ def scrape_prices_once(input_csv):
     Perform a single scrape pass for all products in the input CSV.
     Returns a DataFrame of the latest prices.
     """
-    df_input = pd.read_csv(input_csv)
+    df_input = pd.read_txt(input_csv)
     df_input = df_input.iloc[:3]
 
     if "ProductCode" not in df_input.columns:
@@ -75,3 +75,4 @@ def append_to_csv(df, output_csv):
 
     df_combined.to_csv(output_csv, index=False)
     return df_combined
+
