@@ -31,43 +31,42 @@ def get_bestbuy_prices(product_code):
         return None, None
 
 
-def scrape_prices_once(uploaded_file):
+def scrape_prices_once(input_txt):
     """
-    Perform a single scrape pass for all products in the uploaded CSV or TXT file.
+    Perform a single scrape pass for all products in the local TXT file.
     Returns a DataFrame of the latest prices.
     """
-    if uploaded_file is None:
-        st.warning("Please upload an input file first.")
-        return None
-
-    # Read uploaded file (supports .csv or tab-separated .txt)
     try:
-        df_input = pd.read_csv(uploaded_file, sep=None, engine='python')
+        # Read the local text file (tab-separated)
+        df_input = pd.read_table(input_txt)
+    except FileNotFoundError:
+        st.error(f"File not found: {input_txt}")
+        return None
     except Exception as e:
-        st.error(f"Error reading uploaded file: {e}")
+        st.error(f"Error reading file {input_txt}: {e}")
         return None
 
-    # For demo: limit to 3 rows
+    # Optional: limit rows for quick testing
     df_input = df_input.iloc[:3]
 
-    # Check for required columns
+    # Validate columns
     if "ProductCode" not in df_input.columns or "DFN" not in df_input.columns:
-        st.error("Input file must contain 'ProductCode' and 'DFN' columns.")
+        st.error("Input TXT must contain 'ProductCode' and 'DFN' columns.")
         return None
 
-    # Create timestamp
+    # Timestamp for when scrape is performed
     run_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     sale_prices, original_prices = [], []
 
-    # Fetch prices
+    # Loop through product codes
     for i, code in enumerate(df_input["ProductCode"], start=1):
-        st.write(f"[{i}/{len(df_input)}] Fetching {code}...")
+        print(f"[{i}/{len(df_input)}] Fetching {code}...")
         sale, original = get_bestbuy_prices(code)
         sale_prices.append(sale)
         original_prices.append(original)
 
-    # Build output DataFrame
+    # Construct output DataFrame
     df_run = pd.DataFrame({
         "ProductCode": df_input["ProductCode"],
         "DFN": df_input["DFN"],
@@ -94,6 +93,7 @@ def append_to_csv(df, output_csv):
 
     df_combined.to_csv(output_csv, index=False)
     return df_combined
+
 
 
 
