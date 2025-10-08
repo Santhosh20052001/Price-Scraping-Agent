@@ -613,49 +613,29 @@ def analyze_with_llm(df: pd.DataFrame):
 
 # --- Display Cards ---
 def display_cards():
-    if "df_combined" not in st.session_state or st.session_state.df_combined.empty:
+    df_combined = st.session_state.df_combined
+
+    if df_combined.empty:
         cards_placeholder.info("No data yet. Wait for first scrape.")
         return
 
-    df_combined = st.session_state.df_combined.copy()
-
-    # Ensure required columns exist
-    required_cols = ["DFN", "ScrapedAt", "SalePrice"]
-    for col in required_cols:
-        if col not in df_combined.columns:
-            cards_placeholder.warning(f"Missing column: {col}")
-            return
-
-    # Convert timestamp safely
-    df_combined["ScrapedAt"] = pd.to_datetime(df_combined["ScrapedAt"], errors="coerce")
-    if df_combined["ScrapedAt"].isnull().all():
-        cards_placeholder.warning("No valid timestamps to display charts.")
-        return
-
-    df_combined_sorted = df_combined.sort_values("ScrapedAt")
-    df_last_two = df_combined_sorted.groupby("DFN").tail(2)
-    df_unique = df_last_two["DFN"].unique()
-
+    # Ensure ScrapedAt is datetime
+    df_combined['ScrapedAt'] = pd.to_datetime(df_combined['ScrapedAt'], errors='coerce')
+    
     cols_per_row = 3
-    for i, dfn in enumerate(df_unique):
+    for i, row in enumerate(df_combined.itertuples()):
         if i % cols_per_row == 0:
             cols = cards_placeholder.columns(cols_per_row)
 
-        df_dfn = df_last_two[df_last_two["DFN"] == dfn].sort_values("ScrapedAt")
-        if df_dfn.empty or df_dfn["SalePrice"].isnull().all():
-            continue  # skip if no price data
-
-        current_price = df_dfn["SalePrice"].iloc[-1]
-
-        chart = alt.Chart(df_dfn).mark_line(point=True).encode(
+        chart = alt.Chart(pd.DataFrame([row._asdict()])).mark_line(point=True).encode(
             x=alt.X("ScrapedAt", title="Time", axis=alt.Axis(labelAngle=-45)),
             y=alt.Y("SalePrice", title="Price (USD)"),
             tooltip=["ScrapedAt", "SalePrice"]
         ).properties(width=200, height=150)
 
         with cols[i % cols_per_row]:
-            st.markdown(f"**{dfn}**")
-            st.metric("Current Price", f"${current_price}")
+            st.markdown(f"**{row.DFN}**")
+            st.metric("Current Price", f"${row.SalePrice}")
             st.altair_chart(chart)
 
 # --- Infinite Loop ---
@@ -673,15 +653,12 @@ if run_agent:
                 time.sleep(interval)
                 continue
 
-            # Append to session state
-            st.session_state.df_combined = pd.concat(
-                [st.session_state.df_combined, df_latest],
-                ignore_index=True
-            )
-
             # Show table
             table_placeholder.dataframe(st.session_state.df_combined, use_container_width=True)
-
+            # Only store the latest scrape
+            st.session_state.df_combined = df_latest.copy()  
+            # Show table
+            table_placeholder.dataframe(df_latest, use_container_width=True)
             # Show cards
             display_cards()
 
@@ -699,6 +676,7 @@ if run_agent:
 
 else:
     st.info("🟢 Toggle **Start AI Agent** to begin real-time scraping.")
+
 
 
 
