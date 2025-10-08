@@ -9,8 +9,9 @@ import altair as alt
 st.set_page_config(page_title="Best Buy Price Agent", layout="wide")
 st.title("📈 Real-Time Best Buy Price Agent")
 # --- Sidebar controls ---
-input_csv = st.sidebar.text_input("Input CSV path", "bestbuy_uids.csv", key="input_csv")
-output_csv = st.sidebar.text_input("Output CSV path", "tracked_prices.csv", key="output_csv")
+# --- Static CSV paths ---
+input_csv = "bestbuy_uids.csv"      # Input CSV stored in your repo
+output_csv = "tracked_prices.csv" 
 interval = st.sidebar.number_input("Scrape interval (seconds)", min_value=10, max_value=600, value=30, key="interval")
 run_agent = st.sidebar.toggle("Start AI Agent", value=False, key="run_agent")
 # Placeholders
@@ -118,3 +119,4 @@ if run_agent:
 
 else:
     st.info("🟢 Toggle **Start AI Agent** to begin real-time scraping.")
+
