@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
-import streamlit as st
 
 def get_bestbuy_prices(product_code):
     """
@@ -32,52 +31,34 @@ def get_bestbuy_prices(product_code):
         return None, None
 
 
-def scrape_prices_once(input_txt):
+def scrape_prices_once(input_csv):
     """
-    Perform a single scrape pass for all products in the local TXT file.
+    Perform a single scrape pass for all products in the input CSV.
     Returns a DataFrame of the latest prices.
     """
-    try:
-        # Read the local text file (tab-separated)
-        df_input = pd.read_table(input_txt)
-    except FileNotFoundError:
-        st.error(f"File not found: {input_txt}")
-        return None
-    except Exception as e:
-        st.error(f"Error reading file {input_txt}: {e}")
-        return None
-
-    # Optional: limit rows for quick testing
+    df_input = pd.read_csv(input_csv)
     df_input = df_input.iloc[:3]
 
-    # Validate columns
-    if "ProductCode" not in df_input.columns or "DFN" not in df_input.columns:
-        st.error("Input TXT must contain 'ProductCode' and 'DFN' columns.")
-        return None
+    if "ProductCode" not in df_input.columns:
+        raise ValueError("Input CSV must have a column named 'ProductCode'.")
 
-    # Timestamp for when scrape is performed
     run_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
     sale_prices, original_prices = [], []
 
-    # Loop through product codes
     for i, code in enumerate(df_input["ProductCode"], start=1):
         print(f"[{i}/{len(df_input)}] Fetching {code}...")
         sale, original = get_bestbuy_prices(code)
         sale_prices.append(sale)
         original_prices.append(original)
 
-    # Construct output DataFrame
     df_run = pd.DataFrame({
         "ProductCode": df_input["ProductCode"],
-        "DFN": df_input["DFN"],
+        "DFN" : df_input["DFN"],
         "SalePrice": sale_prices,
         "OriginalPrice": original_prices,
         "ScrapedAt": run_timestamp
     })
-
     return df_run
-
 
 
 
@@ -94,8 +75,3 @@ def append_to_csv(df, output_csv):
 
     df_combined.to_csv(output_csv, index=False)
     return df_combined
-
-
-
-
-
