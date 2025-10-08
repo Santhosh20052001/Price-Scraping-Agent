@@ -228,6 +228,7 @@ if run_agent:
 
             # Append to session state
             st.session_state.df_combined = pd.concat([st.session_state.df_combined, df_latest], ignore_index=True)
+            st.write("Started Scraping")
 
             # Show only latest per DFN
             # Show only latest per DFN, first 3 rows
@@ -253,4 +254,5 @@ if run_agent:
 
 else:
     st.info("🟢 Toggle **Start AI Agent** to begin real-time scraping.")
+
 
