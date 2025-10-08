@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
+from app import input_csv, output_csv
+
 
 def get_bestbuy_prices(product_code):
     """
@@ -75,3 +77,4 @@ def append_to_csv(df, output_csv):
 
     df_combined.to_csv(output_csv, index=False)
     return df_combined
+
