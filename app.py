@@ -382,19 +382,55 @@ def analyze_with_llm(df: pd.DataFrame):
     return response.choices[0].message.content.strip()
 
 # --- Display Cards ---
+# def display_cards():
+#     if "df_combined" not in st.session_state or st.session_state.df_combined.empty:
+#         cards_placeholder.info("No data yet. Wait for first scrape.")
+#         return
+
+#     df_combined = st.session_state.df_combined.copy()
+    
+#     # Ensure the column exists
+#     if "ScrapedAt" not in df_combined.columns:
+#         cards_placeholder.warning("Scraped data has no timestamp yet.")
+#         return
+
+#     # Sort and continue
+#     df_combined_sorted = df_combined.sort_values("ScrapedAt")
+#     df_last_two = df_combined_sorted.groupby("DFN").tail(2)
+#     df_unique = df_last_two["DFN"].unique()
+
+#     cols_per_row = 3
+#     for i, dfn in enumerate(df_unique):
+#         if i % cols_per_row == 0:
+#             cols = cards_placeholder.columns(cols_per_row)
+
+#         df_dfn = df_last_two[df_last_two["DFN"] == dfn].sort_values("ScrapedAt")
+#         current_price = df_dfn["SalePrice"].iloc[-1]
+
+#         chart = alt.Chart(df_dfn).mark_line(point=True).encode(
+#             x=alt.X("ScrapedAt", title="Time", axis=alt.Axis(labelAngle=-45)),
+#             y=alt.Y("SalePrice", title="Price (USD)"),
+#             tooltip=["ScrapedAt", "SalePrice"]
+#         ).properties(width=200, height=150)
+
+#         with cols[i % cols_per_row]:
+#             st.markdown(f"**{dfn}**")
+#             st.metric("Current Price", f"${current_price}")
+#             st.altair_chart(chart)
+
 def display_cards():
     if "df_combined" not in st.session_state or st.session_state.df_combined.empty:
         cards_placeholder.info("No data yet. Wait for first scrape.")
         return
 
     df_combined = st.session_state.df_combined.copy()
-    
-    # Ensure the column exists
+
+    # Safety check
     if "ScrapedAt" not in df_combined.columns:
         cards_placeholder.warning("Scraped data has no timestamp yet.")
         return
 
-    # Sort and continue
+    df_combined['ScrapedAt'] = pd.to_datetime(df_combined['ScrapedAt'], errors='coerce')
     df_combined_sorted = df_combined.sort_values("ScrapedAt")
     df_last_two = df_combined_sorted.groupby("DFN").tail(2)
     df_unique = df_last_two["DFN"].unique()
@@ -506,5 +542,6 @@ if run_agent:
 
 else:
     st.info("🟢 Toggle **Start AI Agent** to begin real-time scraping.")
+
 
 
