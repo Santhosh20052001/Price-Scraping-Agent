@@ -383,12 +383,18 @@ def analyze_with_llm(df: pd.DataFrame):
 
 # --- Display Cards ---
 def display_cards():
-    df_combined = st.session_state.df_combined
-
-    if df_combined.empty:
+    if "df_combined" not in st.session_state or st.session_state.df_combined.empty:
         cards_placeholder.info("No data yet. Wait for first scrape.")
         return
 
+    df_combined = st.session_state.df_combined.copy()
+    
+    # Ensure the column exists
+    if "ScrapedAt" not in df_combined.columns:
+        cards_placeholder.warning("Scraped data has no timestamp yet.")
+        return
+
+    # Sort and continue
     df_combined_sorted = df_combined.sort_values("ScrapedAt")
     df_last_two = df_combined_sorted.groupby("DFN").tail(2)
     df_unique = df_last_two["DFN"].unique()
@@ -500,4 +506,5 @@ if run_agent:
 
 else:
     st.info("🟢 Toggle **Start AI Agent** to begin real-time scraping.")
+
 
